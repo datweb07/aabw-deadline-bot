@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
-import { streamText, tool } from "ai";
+import { streamText, tool, StreamingTextResponse } from "ai";
+import { google } from "@ai-sdk/google";
 import { openai } from "@ai-sdk/openai";
 import { z } from "zod";
 import { v4 as uuidv4 } from "uuid";
@@ -8,12 +9,19 @@ import { sortDeadlines, getNextDeadline } from "@/lib/utils";
 import type { DeadlineCategory, Deadline } from "@/lib/types";
 
 function getAiModel() {
-  if (!process.env.OPENAI_API_KEY) {
-    throw new Error(
-      "OPENAI_API_KEY is not set. Please add it to .env.local"
-    );
+  // Prefer Gemini if GEMINI_API_KEY is set
+  if (process.env.GEMINI_API_KEY) {
+    const modelId = process.env.AI_MODEL ?? "gemini-2.0-flash";
+    return google(modelId);
   }
-  return openai(process.env.AI_MODEL ?? "gpt-4o-mini");
+  // Fall back to OpenAI
+  if (process.env.OPENAI_API_KEY) {
+    const modelId = process.env.AI_MODEL ?? "gpt-4o-mini";
+    return openai(modelId);
+  }
+  throw new Error(
+    "No AI provider configured. Set GEMINI_API_KEY or OPENAI_API_KEY in .env.local"
+  );
 }
 
 const SYSTEM_PROMPT = `You are a helpful deadline tracking assistant for AABW 2026 (Agentic AI Build Week), a 5-day hackathon event held July 8-12, 2026 in Ho Chi Minh City, Vietnam.
@@ -62,40 +70,45 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const result = streamText({
+    const result = await streamText({
       model,
-      system: `${SYSTEM_PROMPT}\n\nCurrent time: ${new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh", dateStyle: "full", timeStyle: "short" })} (Ho Chi Minh City, UTC+7)`,
+      system: `${SYSTEM_PROMPT}\n\nCurrent time: ${new Date().toLocaleString("en-US", {
+        timeZone: "Asia/Ho_Chi_Minh",
+        dateStyle: "full",
+        timeStyle: "short",
+      })} (Ho Chi Minh City, UTC+7)`,
       messages,
+      maxToolRoundtrips: 5,
       tools: {
         getDeadlines: tool({
-          description: "Get all deadlines, optionally filtered by date, category, or type. Use this to answer questions about what events are on a specific day or of a specific type.",
+          description:
+            "Get all deadlines, optionally filtered by date, category, or type.",
           parameters: z.object({
             date: z.string().optional().describe("Filter by date in YYYY-MM-DD format"),
             category: z
-              .enum(["workshop", "submission", "food_perks", "team", "hackathon", "ceremony", "general"])
-              .optional()
-              .describe("Filter by deadline category"),
-            type: z.enum(["global", "team"]).optional().describe("Filter by global or team deadline"),
+              .enum([
+                "workshop",
+                "submission",
+                "food_perks",
+                "team",
+                "hackathon",
+                "ceremony",
+                "general",
+              ])
+              .optional(),
+            type: z.enum(["global", "team"]).optional(),
             upcomingOnly: z.boolean().optional().describe("Only return future deadlines"),
           }),
           execute: async ({ date, category, type, upcomingOnly }) => {
             const db = await getDb();
             let deadlines = sortDeadlines(db.data.deadlines);
-
-            if (date) {
-              deadlines = deadlines.filter((d) => d.date === date);
-            }
-            if (category) {
-              deadlines = deadlines.filter((d) => d.category === category);
-            }
-            if (type) {
-              deadlines = deadlines.filter((d) => d.type === type);
-            }
+            if (date) deadlines = deadlines.filter((d) => d.date === date);
+            if (category) deadlines = deadlines.filter((d) => d.category === category);
+            if (type) deadlines = deadlines.filter((d) => d.type === type);
             if (upcomingOnly) {
               const now = new Date();
               deadlines = deadlines.filter((d) => new Date(d.datetime) > now);
             }
-
             return {
               count: deadlines.length,
               deadlines: deadlines.map((d) => ({
@@ -113,14 +126,13 @@ export async function POST(request: NextRequest) {
         }),
 
         getNextDeadline: tool({
-          description: "Get the single next upcoming deadline relative to the current time. Use when the user asks 'what is my next deadline?' or similar.",
+          description:
+            "Get the single next upcoming deadline relative to the current time.",
           parameters: z.object({}),
           execute: async () => {
             const db = await getDb();
             const next = getNextDeadline(db.data.deadlines);
-            if (!next) {
-              return { found: false, message: "There are no upcoming deadlines." };
-            }
+            if (!next) return { found: false, message: "No upcoming deadlines." };
             return {
               found: true,
               deadline: {
@@ -137,24 +149,36 @@ export async function POST(request: NextRequest) {
         }),
 
         createDeadline: tool({
-          description: "Create a new TEAM deadline. Use this when the user explicitly asks to add, create, or set a personal or team deadline.",
+          description:
+            "Create a new TEAM deadline when the user asks to add or set a deadline.",
           parameters: z.object({
-            title: z.string().describe("Title of the deadline"),
-            date: z.string().describe("Date in YYYY-MM-DD format"),
-            time: z.string().describe("Time in HH:MM 24-hour format"),
+            title: z.string(),
+            date: z.string().describe("YYYY-MM-DD"),
+            time: z.string().describe("HH:MM 24-hour"),
             category: z
-              .enum(["workshop", "submission", "food_perks", "team", "hackathon", "ceremony", "general"])
-              .optional()
-              .default("team")
-              .describe("Category — defaults to 'team'"),
-            location: z.string().optional().describe("Optional location or venue"),
-            description: z.string().optional().describe("Optional description"),
-            teamName: z.string().optional().describe("Optional team name"),
+              .enum([
+                "workshop",
+                "submission",
+                "food_perks",
+                "team",
+                "hackathon",
+                "ceremony",
+                "general",
+              ])
+              .default("team"),
+            location: z.string().optional(),
+            description: z.string().optional(),
+            teamName: z.string().optional(),
           }),
-          execute: async ({ title, date, time, category, location, description, teamName }) => {
-            if (!title || !date || !time) {
-              return { success: false, error: "title, date, and time are required" };
-            }
+          execute: async ({
+            title,
+            date,
+            time,
+            category,
+            location,
+            description,
+            teamName,
+          }) => {
             const datetime = `${date}T${time}:00+07:00`;
             const now = new Date().toISOString();
             const newDeadline: Deadline = {
@@ -189,23 +213,26 @@ export async function POST(request: NextRequest) {
         }),
 
         deleteDeadline: tool({
-          description: "Delete a TEAM deadline by its ID or title. Only team deadlines can be deleted. Use this when the user asks to remove or delete a deadline.",
+          description:
+            "Delete a TEAM deadline by ID or title. Only team deadlines can be deleted.",
           parameters: z.object({
-            id: z.string().optional().describe("The exact ID of the deadline to delete"),
-            title: z.string().optional().describe("Title to search for (partial match, case-insensitive)"),
+            id: z.string().optional(),
+            title: z.string().optional().describe("Partial match, case-insensitive"),
           }),
           execute: async ({ id, title }) => {
             const db = await getDb();
-
             let target: Deadline | undefined;
             if (id) {
-              target = db.data.deadlines.find((d) => d.id === id && d.type === "team");
+              target = db.data.deadlines.find(
+                (d) => d.id === id && d.type === "team"
+              );
             } else if (title) {
               target = db.data.deadlines.find(
-                (d) => d.type === "team" && d.title.toLowerCase().includes(title.toLowerCase())
+                (d) =>
+                  d.type === "team" &&
+                  d.title.toLowerCase().includes(title.toLowerCase())
               );
             }
-
             if (!target) {
               return {
                 success: false,
@@ -214,23 +241,22 @@ export async function POST(request: NextRequest) {
                   : `No team deadline found matching: "${title}"`,
               };
             }
-
-            db.data.deadlines = db.data.deadlines.filter((d) => d.id !== target!.id);
+            db.data.deadlines = db.data.deadlines.filter(
+              (d) => d.id !== target!.id
+            );
             await db.write();
-            return {
-              success: true,
-              deleted: { id: target.id, title: target.title },
-            };
+            return { success: true, deleted: { id: target.id, title: target.title } };
           },
         }),
       },
-      maxSteps: 5, // Allow up to 5 tool call + response cycles
     });
 
-    return result.toDataStreamResponse();
+    // AI SDK v3.3.x: use toAIStreamResponse()
+    return result.toAIStreamResponse();
   } catch (error) {
     console.error("[POST /api/chat]", error);
-    const message = error instanceof Error ? error.message : "An unexpected error occurred";
+    const message =
+      error instanceof Error ? error.message : "An unexpected error occurred";
     return new Response(JSON.stringify({ error: message }), {
       status: 500,
       headers: { "Content-Type": "application/json" },

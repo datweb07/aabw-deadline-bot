@@ -26,52 +26,52 @@ This implementation plan covers building the full AABW Smart Deadline Tracker & 
   - [x] 3.3 Implement `POST /api/parse` AI schedule smart-parser with Vercel AI SDK `generateObject` and Zod schema
   - [x] 3.4 Implement `POST /api/chat` streaming chat agent with Vercel AI SDK `streamText` and four tool definitions
 
-- [ ] 4. Shadcn/ui base components
+- [x] 4. Shadcn/ui base components
   Depends on: 1
-  - [ ] 4.1 Create `components/ui/button.tsx`, `badge.tsx`, `card.tsx`, `input.tsx`, `label.tsx`, `select.tsx`, `textarea.tsx`, `dialog.tsx`, `toast.tsx`
+  - [x] 4.1 Create `components/ui/button.tsx`, `badge.tsx`, `card.tsx`, `input.tsx`, `label.tsx`, `select.tsx`, `textarea.tsx`, `dialog.tsx`, `toast.tsx`
 
-- [ ] 5. Dashboard and timeline UI
+- [x] 5. Dashboard and timeline UI
   Depends on: 2, 4
-  - [~] 5.1 Create `app/layout.tsx` root layout with Inter font, metadata, and Providers wrapper
-  - [~] 5.2 Create `app/globals.css` with Tailwind directives and custom CSS variables for dark theme
-  - [~] 5.3 Create `app/page.tsx` server component shell that imports DashboardShell
-  - [~] 5.4 Create `components/dashboard/DashboardShell.tsx` client component with main state and layout
-  - [~] 5.5 Create `components/dashboard/FilterBar.tsx` with All / Global / Team filter tabs
-  - [~] 5.6 Create `components/dashboard/TimelineView.tsx` and `DayGroup.tsx` grouping deadlines by date
-  - [~] 5.7 Create `components/dashboard/TimelineItem.tsx` with category color badges and location display
-  - [~] 5.8 Create `components/dashboard/CurrentTimeLine.tsx` animated "now" indicator inserted between past/future items
+  - [x] 5.1 Create `app/layout.tsx` root layout with Inter font, metadata, and Providers wrapper
+  - [x] 5.2 Create `app/globals.css` with Tailwind directives and custom CSS variables for dark theme
+  - [x] 5.3 Create `app/page.tsx` server component shell that imports DashboardShell
+  - [x] 5.4 Create `components/dashboard/DashboardShell.tsx` client component with main state and layout
+  - [x] 5.5 Create `components/dashboard/FilterBar.tsx` with All / Global / Team filter tabs
+  - [x] 5.6 Create `components/dashboard/TimelineView.tsx` and `DayGroup.tsx` grouping deadlines by date
+  - [x] 5.7 Create `components/dashboard/TimelineItem.tsx` with category color badges and location display
+  - [x] 5.8 Create `components/dashboard/CurrentTimeLine.tsx` animated "now" indicator inserted between past/future items
 
-- [ ] 6. Deadline management modals
+- [x] 6. Deadline management modals
   Depends on: 4, 5
-  - [~] 6.1 Create `components/deadlines/DeadlineModal.tsx` create/edit form with Zod client validation
-  - [~] 6.2 Create `components/deadlines/ParseUploadModal.tsx` two-tab (text/image) upload with AI preview and per-item confirmation
+  - [x] 6.1 Create `components/deadlines/DeadlineModal.tsx` create/edit form with Zod client validation
+  - [x] 6.2 Create `components/deadlines/ParseUploadModal.tsx` two-tab (text/image) upload with AI preview and per-item confirmation
 
-- [ ] 7. Chat agent UI
+- [x] 7. Chat agent UI
   Depends on: 3, 4
-  - [~] 7.1 Create `components/chat/ChatPanel.tsx` slide-in panel with open/close animation
-  - [~] 7.2 Create `components/chat/ChatMessages.tsx` scrollable history with auto-scroll
-  - [~] 7.3 Create `components/chat/ChatMessage.tsx` message bubble (user vs assistant styling)
-  - [~] 7.4 Create `components/chat/ChatInput.tsx` with Enter-to-send and Shift+Enter newline
+  - [x] 7.1 Create `components/chat/ChatPanel.tsx` slide-in panel with open/close animation
+  - [x] 7.2 Create `components/chat/ChatMessages.tsx` scrollable history with auto-scroll
+  - [x] 7.3 Create `components/chat/ChatMessage.tsx` message bubble (user vs assistant styling)
+  - [x] 7.4 Create `components/chat/ChatInput.tsx` with Enter-to-send and Shift+Enter newline
 
-- [ ] 8. Notification system
+- [x] 8. Notification system
   Depends on: 3, 4
-  - [~] 8.1 Create `hooks/useNotifications.ts` notification state with issued-key dedup Set
-  - [~] 8.2 Create `components/notifications/NotificationPoller.tsx` client component with 30s interval polling
-  - [~] 8.3 Create `components/notifications/AlertTray.tsx` bell icon with badge count and popover list
-  - [~] 8.4 Create `components/notifications/NotificationItem.tsx` single alert row with dismiss button
+  - [x] 8.1 Create `hooks/useNotifications.ts` notification state with issued-key dedup Set
+  - [x] 8.2 Create `components/notifications/NotificationPoller.tsx` client component with 30s interval polling
+  - [x] 8.3 Create `components/notifications/AlertTray.tsx` bell icon with badge count and popover list
+  - [x] 8.4 Create `components/notifications/NotificationItem.tsx` single alert row with dismiss button
 
-- [ ] 9. SWR hooks
+- [x] 9. SWR hooks
   Depends on: 3
-  - [~] 9.1 Create `hooks/useDeadlines.ts` SWR hook with optimistic create/update/delete mutations
-  - [~] 9.2 Create `hooks/useChat.ts` Vercel AI SDK `useChat` wrapper with error handling
+  - [x] 9.1 Create `hooks/useDeadlines.ts` SWR hook with optimistic create/update/delete mutations
+  - [x] 9.2 Create `hooks/useChat.ts` Vercel AI SDK `useChat` wrapper with error handling
 
-- [ ] 10. App providers and context
+- [x] 10. App providers and context
   Depends on: 8, 9
-  - [~] 10.1 Create `app/providers.tsx` wrapping SWR provider and notification context
+  - [x] 10.1 Create `app/providers.tsx` wrapping SWR provider and notification context
 
-- [ ] 11. README and documentation
+- [x] 11. README and documentation
   Depends on: 1
-  - [~] 11.1 Write comprehensive `README.md` with installation, environment setup, feature walkthrough, and architecture overview
+  - [x] 11.1 Write comprehensive `README.md` with installation, environment setup, feature walkthrough, and architecture overview
 
 ## Task Dependency Graph
 

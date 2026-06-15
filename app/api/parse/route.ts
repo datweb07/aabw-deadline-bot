@@ -1,17 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateObject } from "ai";
+import { google } from "@ai-sdk/google";
 import { openai } from "@ai-sdk/openai";
 import { z } from "zod";
 
-// Validate environment and return configured model
 function getAiModel() {
-  if (!process.env.OPENAI_API_KEY) {
-    throw new Error(
-      "OPENAI_API_KEY environment variable is not set. Please configure your API key in .env.local"
-    );
+  if (process.env.GEMINI_API_KEY) {
+    const modelId = process.env.AI_MODEL ?? "gemini-2.0-flash";
+    return google(modelId);
   }
-  const modelId = process.env.AI_MODEL ?? "gpt-4o-mini";
-  return openai(modelId);
+  if (process.env.OPENAI_API_KEY) {
+    const modelId = process.env.AI_MODEL ?? "gpt-4o-mini";
+    return openai(modelId);
+  }
+  throw new Error(
+    "No AI provider configured. Set GEMINI_API_KEY or OPENAI_API_KEY in .env.local"
+  );
 }
 
 // Zod schema for structured extraction
