@@ -1,32 +1,28 @@
 # AABW Smart Deadline Tracker & Reminder Bot
 
-> **Builder Experience Award — Agentic AI Build Week 2026**
-> Jul 8–12, 2026 · Ho Chi Minh City, Vietnam
+> **Builder Experience Award - Agentic AI Build Week 2026**
+> Jul 8–12, 2026 · Ho Chi Minh City, Vietnam 
 
-An AI-powered, production-ready web application that helps hackathon participants stay on top of every workshop, submission cut-off, food window, and team milestone across the 5-day event — with a conversational AI agent, smart schedule parsing, and real-time in-app alerts.
+An AI-powered, production-ready web application that helps hackathon participants stay on top of every workshop, submission cut-off, food window, and team milestone across the 5-day AABW 2026 event - powered by **Groq** (ultra-fast LLM inference), a conversational AI agent with tool calling, smart schedule parsing, and real-time in-app alerts.
 
----
-
-## ✨ Features
+## Features
 
 | Feature | Description |
 |---|---|
-| **Dashboard & Timeline** | Responsive dark-theme timeline showing all 45+ pre-seeded AABW 2026 events grouped by day with a live "NOW" indicator |
-| **AI Schedule Parser** | Paste raw text or upload an image (JPEG/PNG/WebP ≤ 10 MB); GPT-4o-mini extracts events with title, date, time, category, and location |
-| **Dynamic Chat Agent** | Conversational AI with 4 function-calling tools: query deadlines, get next deadline, create team deadlines, delete team deadlines |
-| **Notification System** | Automatic in-app alerts 30 min and 15 min before each deadline; deduped per session; optional Web Push support |
+| **Dashboard & Timeline** | Responsive dark-theme timeline showing 45+ pre-seeded AABW 2026 events, grouped by day with a live "NOW" indicator |
+| **AI Schedule Parser** | Paste raw text from Telegram/Discord - Groq extracts events with title, date, time, category, and location via structured output |
+| **AI Chat Agent** | Ask questions in natural language; the agent calls tools to query deadlines, get the next upcoming item, create or delete team deadlines |
+| **Smart Notifications** | Automatic in-app alerts 30 min and 15 min before each deadline, deduped per browser session, with optional Web Push |
 | **Team Deadlines** | Create, edit, and delete personalized team milestones alongside the official schedule |
-| **Filter & Search** | Filter timeline by All / Event (global) / Team deadlines |
+| **Filter Tabs** | Switch between All / Event (global) / Team deadline views instantly |
 
----
-
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
 - **Node.js** ≥ 18.17
-- **npm** ≥ 9 (or pnpm/yarn)
-- An **OpenAI API key** (get one at [platform.openai.com/api-keys](https://platform.openai.com/api-keys))
+- **npm** ≥ 9
+- A free **Groq API key** - get one at [console.groq.com/keys](https://console.groq.com/keys) (no credit card needed)
 
 ### 1. Install dependencies
 
@@ -34,26 +30,26 @@ An AI-powered, production-ready web application that helps hackathon participant
 npm install
 ```
 
-### 2. Configure environment variables
+### 2. Configure environment
 
 ```bash
 cp .env.example .env.local
 ```
 
-Open `.env.local` and set your OpenAI API key:
+Open `.env.local` and set your Groq key:
 
 ```env
-OPENAI_API_KEY=sk-...your-key-here...
-AI_MODEL=gpt-4o-mini
+GROQ_API_KEY=gsk_your_key_here
+AI_MODEL=llama-3.1-8b-instant
 ```
 
-### 3. Run the development server
+### 3. Run the dev server
 
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) — the app loads instantly with 45 pre-seeded AABW 2026 events.
+Open [http://localhost:3000](http://localhost:3000) - loads instantly with 45 pre-seeded AABW 2026 events. No database setup needed.
 
 ### 4. Build for production
 
@@ -62,140 +58,126 @@ npm run build
 npm start
 ```
 
----
-
-## 🔑 Environment Variables
+## Environment Variables
 
 | Variable | Required | Default | Description |
 |---|---|---|---|
-| `OPENAI_API_KEY` | ✅ Yes | — | OpenAI API key |
-| `AI_MODEL` | No | `gpt-4o-mini` | LLM model identifier |
-| `GEMINI_API_KEY` | No | — | Google Gemini key (if switching providers) |
-| `NEXT_PUBLIC_APP_URL` | No | `http://localhost:3000` | Base URL for the app |
+| `GROQ_API_KEY` | Yes | - | Groq API key from console.groq.com |
+| `AI_MODEL` | No | `llama-3.1-8b-instant` | Chat model ID |
+| `AI_PARSE_MODEL` | No | same as `AI_MODEL` | Model used for schedule parsing (use `llama-3.3-70b-versatile` for better accuracy) |
+| `NEXT_PUBLIC_APP_URL` | No | `http://localhost:3000` | Base URL |
 | `NEXT_PUBLIC_NOTIFICATION_POLL_INTERVAL` | No | `30000` | Notification polling interval in ms |
 
-> The AI features gracefully degrade with a descriptive error message if the API key is missing — the dashboard and timeline still work fully.
+> If `GROQ_API_KEY` is missing, AI features return a descriptive error. The dashboard and timeline still work fully.
 
----
-
-## 🏗 Architecture
+## Architecture
 
 ```
 aabw-smart-deadline-tracker/
-├── app/                        # Next.js 14 App Router
-│   ├── layout.tsx              # Root layout (Inter font, dark theme, SWR provider)
-│   ├── page.tsx                # Home page → DashboardShell
-│   ├── globals.css             # Tailwind base + dark theme CSS variables
-│   ├── providers.tsx           # SWR global config
+├── app/                          # Next.js 14 App Router
+│   ├── layout.tsx                # Root layout (Inter font, dark theme, SWR)
+│   ├── page.tsx                  # Home → DashboardShell
+│   ├── globals.css               # Tailwind base + dark theme variables
+│   ├── providers.tsx             # SWR global config
 │   └── api/
-│       ├── deadlines/route.ts          # GET, POST /api/deadlines
-│       ├── deadlines/[id]/route.ts     # PUT, DELETE /api/deadlines/:id
-│       ├── parse/route.ts              # POST /api/parse (AI smart-parser)
-│       └── chat/route.ts              # POST /api/chat (streaming agent)
+│       ├── deadlines/route.ts    # GET + POST /api/deadlines
+│       ├── deadlines/[id]/route.ts  # PUT + DELETE /api/deadlines/:id
+│       ├── parse/route.ts        # POST /api/parse - AI schedule parser
+│       └── chat/route.ts         # POST /api/chat - Groq agent with tools
 │
 ├── components/
-│   ├── ui/                     # Shadcn/ui-style base components (Button, Dialog, etc.)
-│   ├── dashboard/              # DashboardShell, TimelineView, DayGroup, TimelineItem, etc.
-│   ├── deadlines/              # DeadlineModal, ParseUploadModal
-│   ├── chat/                   # ChatPanel, ChatMessages, ChatMessage, ChatInput
-│   └── notifications/          # AlertTray, NotificationItem, NotificationPoller
+│   ├── ui/                       # Radix UI + CVA base components (Button, Dialog, etc.)
+│   ├── dashboard/                # DashboardShell, TimelineView, DayGroup, TimelineItem, ...
+│   ├── deadlines/                # DeadlineModal, ParseUploadModal
+│   ├── chat/                     # ChatPanel, ChatMessages, ChatMessage, ChatInput
+│   └── notifications/            # AlertTray, NotificationItem, NotificationPoller
 │
 ├── hooks/
-│   ├── useDeadlines.ts         # SWR hook for deadline CRUD
-│   ├── useChat.ts              # Vercel AI SDK useChat wrapper
-│   └── useNotifications.ts     # In-memory notification state + dedup
+│   ├── useDeadlines.ts           # SWR hook with CRUD mutations
+│   ├── useChat.ts                # useChat wrapper (streamMode="text" for Groq)
+│   └── useNotifications.ts       # In-memory notification state + session dedup
 │
 ├── lib/
-│   ├── types.ts                # All TypeScript interfaces
-│   ├── db.ts                   # Lowdb singleton (seeds from mockData.json)
-│   └── utils.ts                # Date helpers, category colors, sorting
+│   ├── types.ts                  # All TypeScript interfaces
+│   ├── db.ts                     # Lowdb singleton (auto-seeds from mockData.json)
+│   └── utils.ts                  # Date helpers, category colors, sorting
 │
 └── data/
-    ├── mockData.json           # 45 pre-seeded AABW 2026 events
-    └── db.json                 # Runtime database (auto-created, gitignored)
+    ├── mockData.json             # 45 pre-seeded AABW 2026 events (read-only)
+    └── db.json                   # Runtime database (auto-created, gitignored)
 ```
 
-### Data Flow
+## AI Integration (Groq)
 
-```
-Browser → Next.js API Routes → Lowdb (data/db.json)
-                           ↓
-                    Vercel AI SDK → OpenAI GPT-4o-mini
-                           ↓
-              Structured output (parser) / Streaming (chat)
-```
-
----
-
-## 🤖 AI Integration
-
-### Schedule Smart-Parser (`POST /api/parse`)
-
-Uses `generateObject` from Vercel AI SDK with a Zod schema to force structured JSON output. The system prompt is AABW-aware (knows the event dates, timezone UTC+7, and valid categories). Returns candidate events for user confirmation — nothing is persisted without explicit confirmation.
+The app uses **Groq** as the AI backend via its OpenAI-compatible API (`https://api.groq.com/openai/v1`), accessed through `@ai-sdk/openai`'s `createOpenAI` with a custom `baseURL`. This avoids the streaming format incompatibilities of `@ai-sdk/groq` with `ai@3.3.x`.
 
 ### Chat Agent (`POST /api/chat`)
 
-Uses `streamText` with 4 tool definitions:
+Uses `generateText` (not streaming) with `maxToolRoundtrips: 5` to fully resolve tool calls server-side, then streams the final text response as plain chunks. Client uses `streamMode: "text"`.
+
+**4 tools available to the agent:**
 
 | Tool | Description |
 |---|---|
-| `getDeadlines` | Filter deadlines by date, category, type, or upcoming-only |
-| `getNextDeadline` | Returns the next upcoming deadline from now |
-| `createDeadline` | Creates a team deadline and persists to the database |
-| `deleteDeadline` | Deletes a team deadline by ID or partial title match |
+| `getDeadlines` | Filter by date, category, type, upcomingOnly |
+| `getNextDeadline` | Returns the next deadline from now |
+| `createDeadline` | Creates a team deadline, persists to Lowdb |
+| `deleteDeadline` | Deletes by ID or partial title match |
 
-Example queries:
-- *"What is my next deadline?"*
-- *"What workshops are on July 9?"*
-- *"Where is the Google Cloud workshop?"*
-- *"Add a team deadline: final rehearsal at 8 PM tonight"*
-- *"Delete the dry-run deadline"*
+**Example queries:**
+```
+"What is my next deadline?"
+"What workshops are on July 9?"
+"Where is the AWS workshop?"
+"Add a team deadline: dry run at 9 PM tonight"
+"Delete the dry run deadline"
+```
 
----
+### Schedule Parser (`POST /api/parse`)
 
-## 🧪 How It Solves the Builder Experience Problem
+Uses `generateObject` with a Zod schema for structured extraction. Recommended model: `llama-3.3-70b-versatile` via `AI_PARSE_MODEL` env var. Returns candidate events for user confirmation — nothing is auto-persisted.
 
-During AABW, information overload is real — announcements come via Telegram, Discord, printed schedules, and verbal updates. Teams miss food windows, workshops, and submission deadlines constantly.
-
-This tool solves that by:
-
-1. **Pre-seeding all 45 official AABW 2026 events** so participants have the full schedule on day 1 with zero setup.
-2. **AI parsing of new announcements** — when organizers post schedule changes on Telegram, participants paste the message and the AI instantly adds the new events.
-3. **Conversational deadline lookup** — no need to scroll through a schedule. Ask "Where is the AWS workshop?" and get an instant answer.
-4. **Automatic 15/30-minute alerts** — participants get notified before food windows close and before submission deadlines hit, even if they're deep in a coding session.
-
----
-
-## 🛠 Tech Stack
-
-| Layer | Technology |
-|---|---|
-| Framework | Next.js 14 (App Router) |
-| Language | TypeScript 5.5 |
-| Styling | Tailwind CSS 3.4 + dark theme |
-| UI Components | Radix UI primitives + class-variance-authority (shadcn/ui pattern) |
-| Icons | Lucide React |
-| Database | Lowdb 7 (JSON file, zero config) |
-| AI SDK | Vercel AI SDK 3.3 |
-| LLM | OpenAI GPT-4o-mini (swappable via env var) |
-| Data Fetching | SWR 2.2 |
-| Validation | Zod 3.23 |
-
----
-
-## 📋 API Reference
+## API Reference
 
 | Method | Endpoint | Description |
 |---|---|---|
-| `GET` | `/api/deadlines` | List all deadlines (sorted by datetime) |
+| `GET` | `/api/deadlines` | List all deadlines, sorted by datetime |
 | `POST` | `/api/deadlines` | Create a team deadline |
 | `PUT` | `/api/deadlines/:id` | Update a deadline |
 | `DELETE` | `/api/deadlines/:id` | Delete a deadline |
-| `POST` | `/api/parse` | AI-parse schedule text or image |
-| `POST` | `/api/chat` | Streaming chat agent |
+| `POST` | `/api/parse` | AI-parse schedule from text |
+| `POST` | `/api/chat` | Groq chat agent (plain text stream) |
 
----
+## Tech Stack
 
-## 📄 License
+| Layer | Technology | Version |
+|---|---|---|
+| Framework | Next.js App Router | 14.2.5 |
+| Language | TypeScript | 5.5.3 |
+| Styling | Tailwind CSS | 3.4.6 |
+| UI Components | Radix UI + class-variance-authority | - |
+| Icons | Lucide React | 0.414.0 |
+| Database | Lowdb (JSON file, zero config) | 7.0.1 |
+| AI SDK | Vercel AI SDK | 3.3.15 |
+| AI Provider | Groq (via OpenAI-compat endpoint) | - |
+| LLM | llama-3.1-8b-instant (default) | - |
+| Data Fetching | SWR | 2.2.5 |
+| Validation | Zod | 3.23.8 |
 
-MIT — built for AABW 2026 Builder Experience Award.
+## Why Groq?
+
+- **Free tier** - perfect for hackathon demos, no credit card required
+- **Ultra-fast inference** ~100ms response time, even with tool calls
+- **OpenAI-compatible API** - drop-in with `createOpenAI({ baseURL: "https://api.groq.com/openai/v1" })`
+- **LLaMA 3.1 8B** supports function calling, adequate for deadline queries
+
+## How It Solves the Builder Experience Problem
+
+During AABW, information overload is constant — announcements hit Telegram, Discord, printed schedules, and verbal updates. Teams regularly miss food windows, workshops, and submission deadlines while deep in coding sessions.
+
+This tool addresses that by:
+
+1. **Pre-seeding 45 official events** - participants have the full schedule on Day 1, zero setup
+2. **AI parsing new announcements** - paste a Telegram message, AI extracts and adds new events instantly
+3. **Conversational lookup** - ask "Where is the MongoDB workshop?" instead of scrolling a PDF
+4. **Automatic 15/30-minute alerts** - never miss a food window or submission deadline again
