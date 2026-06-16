@@ -2,12 +2,14 @@
 import { useChat as useAiChat } from "ai/react";
 
 /**
- * Thin wrapper around Vercel AI SDK's useChat, pointing at /api/chat.
- * Re-exports all standard useChat fields so consumers don't need to import from ai/react directly.
+ * Wrapper around Vercel AI SDK's useChat.
+ * streamMode "text" because the route returns plain text (not AI SDK data stream).
+ * This works because we use generateText server-side and stream the result as plain text.
  */
 export function useChat() {
   return useAiChat({
     api: "/api/chat",
+    streamMode: "text",
     onError: (error) => {
       console.error("[Chat error]", error);
     },
