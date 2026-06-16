@@ -165,7 +165,7 @@ export default function ParseUploadModal({ open, onClose, onSaved }: ParseUpload
               {selected.size} deadline{selected.size !== 1 ? "s" : ""} added!
             </p>
           </div>
-        ) : parseState === "preview" ? (
+        ) : (parseState === "preview" || parseState === "saving") ? (
           <div className="space-y-4">
             {rawResponse && (
               <p className="text-xs text-gray-500 italic">{rawResponse}</p>
