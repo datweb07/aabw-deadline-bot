@@ -11,9 +11,10 @@ interface RouteContext {
 }
 
 export async function PUT(request: NextRequest, { params }: RouteContext) {
+  try {
     const { id } = params;
     const body = await request.json();
-    
+
     const deadlines = await getDeadlines();
     const existing = deadlines.find((d) => d.id === id);
     if (!existing) {
