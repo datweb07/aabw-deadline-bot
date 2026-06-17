@@ -32,6 +32,8 @@ export default function DashboardShell() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   const [isClient, setIsClient] = useState(false);
+  // State quản lý kích thước động của đồng hồ theo màn hình
+  const [clockSize, setClockSize] = useState({ width: 40, height: 56, fontSize: 30 });
 
   const { deadlines, isLoading, mutate } = useDeadlines();
   const { notifications, addNotification, dismissNotification } = useNotifications();
@@ -81,6 +83,30 @@ export default function DashboardShell() {
 
   useEffect(() => {
     setIsClient(true);
+    const handleResize = () => {
+      const width = window.innerWidth;
+      if (width < 360) {
+        //màn hình siêu nhỏ
+        setClockSize({ width: 24, height: 36, fontSize: 18 });
+      } else if (width < 425) {
+        //màn hình trung bình
+        setClockSize({ width: 28, height: 40, fontSize: 22 });
+      } else if (width < 640) {
+        //màn hình lớn
+        setClockSize({ width: 34, height: 48, fontSize: 26 });
+      } else {
+        //tablet và desktop
+        setClockSize({ width: 40, height: 56, fontSize: 30 });
+      }
+    };
+
+    handleResize();
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  useEffect(() => {
     const handleScroll = () => {
       const containerScroll = document.getElementById("scrollable-container")?.scrollTop || 0;
       setShowScrollTop(containerScroll > 300);
@@ -190,7 +216,7 @@ export default function DashboardShell() {
           </div>
 
           {/* ── HERO BANNER ── */}
-          <div className="relative overflow-hidden bg-white border-b border-gray-200 px-6 py-8">
+          <div className="relative overflow-hidden bg-white border-b border-gray-200 px-4 sm:px-6 py-8">
             <div className="relative flex flex-col xl:flex-row justify-between items-start gap-8 w-full">
 
               <div className="max-w-4xl">
@@ -207,22 +233,29 @@ export default function DashboardShell() {
 
               {/* ── FLIP CLOCK ── */}
               {isClient && (
-                <div className="shrink-0 bg-white rounded-2xl p-5 border border-gray-700 w-full md:w-auto relative overflow-hidden group flex flex-col items-center">
-                  <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-green-400 to-transparent opacity-50 group-hover:opacity-100 transition-opacity duration-500" />
-
-                  <div className="flex items-center gap-2 mb-4">
+                <div className="shrink-0 bg-white rounded-2xl p-4 sm:p-5 border border-gray-200 shadow-sm w-full xl:w-auto relative overflow-hidden group flex flex-col items-center">
+                  <div className="flex items-center gap-2 mb-3 sm:mb-4">
                     <p className="text-xs font-bold text-green-600 uppercase tracking-wider">Final Submission</p>
                   </div>
 
-                  <FlipClockCountdown
-                    to={SUBMISSION_DEADLINE}
-                    labels={['DAYS', 'HOURS', 'MINS', 'SECS']}
-                    labelStyle={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: '#9ca3af', paddingTop: 8 }}
-                    digitBlockStyle={{ width: 44, height: 60, fontSize: 32, fontWeight: 800, backgroundColor: '#111827', color: '#4ade80' }}
-                    dividerStyle={{ color: '#030712', height: 2 }}
-                    separatorStyle={{ color: '#4ade80', size: '4px' }}
-                    duration={0.6}
-                  />
+                  <div className="w-full flex justify-center">
+                    <FlipClockCountdown
+                      to={SUBMISSION_DEADLINE}
+                      labels={['DAYS', 'HOURS', 'MINS', 'SECS']}
+                      labelStyle={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: '#9ca3af', paddingTop: 8 }}
+                      digitBlockStyle={{
+                        width: clockSize.width,
+                        height: clockSize.height,
+                        fontSize: clockSize.fontSize,
+                        fontWeight: 800,
+                        backgroundColor: '#111827',
+                        color: '#4ade80'
+                      }}
+                      dividerStyle={{ color: '#030712', height: 2 }}
+                      separatorStyle={{ color: '#4ade80', size: '4px' }}
+                      duration={0.6}
+                    />
+                  </div>
                 </div>
               )}
 
@@ -230,7 +263,7 @@ export default function DashboardShell() {
           </div>
 
           {/* ── STATS CARDS ── */}
-          <div className="px-6 py-5 grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div className="px-4 sm:px-6 py-5 grid grid-cols-2 sm:grid-cols-4 gap-4">
             <div className="rounded-xl bg-white border border-gray-200 shadow-sm p-4">
               <p className="text-xs text-gray-500 mb-1">Day</p>
               <p className="text-3xl font-bold text-gray-900">
@@ -272,7 +305,7 @@ export default function DashboardShell() {
           </div>
 
           {/* ── WELCOME + FILTER + TIMELINE ── */}
-          <div className="px-6 pb-8">
+          <div className="px-4 sm:px-6 pb-8">
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h2 className="text-base font-semibold text-gray-900">Welcome back, Hacker! 👋</h2>
@@ -283,10 +316,10 @@ export default function DashboardShell() {
               </Button>
             </div>
 
-            <FilterBar 
-              filter={filter} 
-              onChange={setFilter} 
-              totalCounts={{ all: deadlines?.length ?? 0, global: deadlines?.filter((d) => d.type === "global").length ?? 0, team: deadlines?.filter((d) => d.type === "team").length ?? 0 }} 
+            <FilterBar
+              filter={filter}
+              onChange={setFilter}
+              totalCounts={{ all: deadlines?.length ?? 0, global: deadlines?.filter((d) => d.type === "global").length ?? 0, team: deadlines?.filter((d) => d.type === "team").length ?? 0 }}
               searchQuery={searchQuery}
               onSearchChange={setSearchQuery}
               selectedCategory={selectedCategory}
