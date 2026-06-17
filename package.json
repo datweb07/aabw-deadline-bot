@@ -11,6 +11,7 @@
   "dependencies": {
     "@ai-sdk/openai": "0.0.52",
     "@google/generative-ai": "0.21.0",
+    "@leenguyen/react-flip-clock-countdown": "^1.7.2",
     "@radix-ui/react-dialog": "1.1.1",
     "@radix-ui/react-label": "2.1.0",
     "@radix-ui/react-popover": "1.1.1",
