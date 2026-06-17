@@ -44,7 +44,7 @@ export default function AlertTray({ notifications, onDismiss, unreadCount }: Ale
             <div className="flex items-center gap-2">
               <p className="text-sm font-semibold text-gray-900">Upcoming Alerts</p>
               {unreadCount > 0 && (
-                <span className="text-xs bg-red-500/20 text-red-400 border border-red-500/20 rounded-full px-1.5 py-0.5 font-medium">
+                <span className="text-xs text-red-400 px-1.5 py-0.5 font-medium">
                   {unreadCount}
                 </span>
               )}

@@ -15,13 +15,12 @@ export default function NotificationItem({ notification, onDismiss }: Notificati
   return (
     <div className="flex items-start gap-3 rounded-xl p-3 bg-gray-50 border border-gray-200 group hover:border-gray-300 transition-colors">
       {/* Icon */}
-      <div
-        className={`flex h-8 w-8 items-center justify-center rounded-lg shrink-0 mt-0.5 ${
-          isUrgent ? "bg-red-500/15" : "bg-orange-500/15"
-        }`}
+      {/* <div
+        className={`flex h-8 w-8 items-center justify-center rounded-lg shrink-0 mt-0.5 ${isUrgent ? "bg-red-500/15" : "bg-orange-500/15"
+          }`}
       >
         <Clock className={`h-4 w-4 ${isUrgent ? "text-red-400" : "text-orange-400"}`} />
-      </div>
+      </div> */}
 
       {/* Content */}
       <div className="flex-1 min-w-0">
@@ -30,11 +29,10 @@ export default function NotificationItem({ notification, onDismiss }: Notificati
         </p>
         <div className="flex items-center gap-2 mt-1">
           <span
-            className={`text-[11px] font-semibold rounded-full px-1.5 py-0.5 ${
-              isUrgent
-                ? "bg-red-500/15 text-red-400"
-                : "bg-orange-500/15 text-orange-400"
-            }`}
+            className={`text-[11px] font-semibold rounded-full px-1.5 py-0.5 ${isUrgent
+              ? "bg-red-500/15 text-red-400"
+              : "bg-orange-500/15 text-orange-400"
+              }`}
           >
             {notification.proximityWindow} min
           </span>
