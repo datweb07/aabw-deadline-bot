@@ -28,6 +28,8 @@ export default function DashboardShell() {
   const [editingDeadline, setEditingDeadline] = useState<Deadline | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   const [isClient, setIsClient] = useState(false);
 
@@ -38,10 +40,26 @@ export default function DashboardShell() {
 
   const filteredDeadlines = useMemo(() => {
     if (!deadlines) return [];
-    if (filter === "global") return deadlines.filter((d) => d.type === "global");
-    if (filter === "team") return deadlines.filter((d) => d.type === "team");
-    return deadlines;
-  }, [deadlines, filter]);
+    let result = deadlines;
+
+    if (filter === "global") result = result.filter((d) => d.type === "global");
+    if (filter === "team") result = result.filter((d) => d.type === "team");
+
+    if (searchQuery.trim()) {
+      const lowerQ = searchQuery.toLowerCase();
+      result = result.filter(
+        (d) =>
+          d.title.toLowerCase().includes(lowerQ) ||
+          (d.description && d.description.toLowerCase().includes(lowerQ))
+      );
+    }
+
+    if (selectedCategory) {
+      result = result.filter((d) => d.category === selectedCategory);
+    }
+
+    return result;
+  }, [deadlines, filter, searchQuery, selectedCategory]);
 
   const stats = useMemo(() => {
     const all = deadlines ?? [];
@@ -185,23 +203,6 @@ export default function DashboardShell() {
                 <p className="mt-2 text-gray-600 text-sm max-w-md">
                   Workshops, cut-offs, food windows, milestones - all in one place, always on time.
                 </p>
-
-                {/* <div className="mt-5 flex flex-wrap gap-3 text-xs">
-                  {[
-                    { icon: Zap, label: "Powered by Groq", sub: "Ultra-fast LLM inference", color: "text-yellow-600" },
-                    { icon: Bot, label: "AI Agent with Tools", sub: "Conversational + Actionable", color: "text-green-600" },
-                    { icon: Upload, label: "Smart Schedule Parsing", sub: "From PDFs to perfect timelines", color: "text-emerald-600" },
-                    { icon: Bell, label: "Real-time In-App Alerts", sub: "Never miss a critical moment", color: "text-orange-600" },
-                  ].map(({ icon: Icon, label, sub, color }) => (
-                    <div key={label} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-50 border border-gray-200 shadow-sm transition-all hover:bg-white hover:shadow-md">
-                      <Icon className={`h-3.5 w-3.5 ${color} shrink-0`} />
-                      <div>
-                        <p className="text-gray-900 font-medium">{label}</p>
-                        <p className="text-gray-500 text-[10px]">{sub}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div> */}
               </div>
 
               {/* ── FLIP CLOCK ── */}
@@ -282,7 +283,15 @@ export default function DashboardShell() {
               </Button>
             </div>
 
-            <FilterBar filter={filter} onChange={setFilter} totalCounts={{ all: deadlines?.length ?? 0, global: deadlines?.filter((d) => d.type === "global").length ?? 0, team: deadlines?.filter((d) => d.type === "team").length ?? 0 }} />
+            <FilterBar 
+              filter={filter} 
+              onChange={setFilter} 
+              totalCounts={{ all: deadlines?.length ?? 0, global: deadlines?.filter((d) => d.type === "global").length ?? 0, team: deadlines?.filter((d) => d.type === "team").length ?? 0 }} 
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              selectedCategory={selectedCategory}
+              onCategoryChange={setSelectedCategory}
+            />
 
             <div className="mt-5">
               {isLoading ? (
@@ -292,7 +301,7 @@ export default function DashboardShell() {
                   ))}
                 </div>
               ) : (
-                <TimelineView deadlines={filteredDeadlines} onEdit={handleEditDeadline} onRefresh={mutate} />
+                <TimelineView deadlines={filteredDeadlines} onEdit={handleEditDeadline} onRefresh={mutate} onCategoryClick={setSelectedCategory} />
               )}
             </div>
           </div>
